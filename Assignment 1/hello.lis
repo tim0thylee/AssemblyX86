@@ -1,0 +1,250 @@
+     1                                  ;****************************************************************************************************************************
+     2                                  ;Program name: "Hello Program".  This program demonstrates how to input and output a string with embedded whit*
+     3                                  ;space.  Copyright (C) 2021 Timothy Lee                                                                                *
+     4                                  ;This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License  *
+     5                                  ;version 3 as published by the Free Software Foundation.                                                                    *
+     6                                  ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied         *
+     7                                  ;warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.     *
+     8                                  ;A copy of the GNU General Public License v3 is available here:  <https://www.gnu.org/licenses/>.                           *
+     9                                  ;****************************************************************************************************************************
+    10                                  
+    11                                  
+    12                                  
+    13                                  
+    14                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**
+    15                                  ;Author information
+    16                                  ;  Author name: Timothy Lee
+    17                                  ;  Author email: timothylee43@csu.fullerton.edu
+    18                                  ;
+    19                                  ;Program information
+    20                                  ; Program name: The Hello World Program
+    21                                  ;  Programming languages X86 with one module in C++
+    22                                  ;  Date program began 9/6/21
+    23                                  ;  Date program completed 9/14/21
+    24                                  ;
+    25                                  ;Purpose
+    26                                  ;  This program will take inputs from the user and output their name at the end.
+    27                                  ;
+    28                                  ;Project information
+    29                                  ;  Files: good_morning.cpp, hello.asm, run.sh
+    30                                  ;  Status: The program has been tested extensively with no detectable errors.
+    31                                  ;
+    32                                  ;Translator information
+    33                                  ;  Linux: nasm -f elf64 -l hello.lis -o hello.o hello.asm
+    34                                  ;References and credits
+    35                                  ;  Seyfarth, Chapter 11
+    36                                  
+    37                                  ;===== Begin code area =====================================================================================================================================================
+    38                                  
+    39                                  extern printf                                               ;External C++ function for writing to standard output device
+    40                                  
+    41                                  extern scanf                                                ;External C++ function for reading from the standard input device
+    42                                  
+    43                                  extern fgets
+    44                                  
+    45                                  extern stdin
+    46                                  
+    47                                  extern strlen
+    48                                  
+    49                                  global hello_world                                          ;This makes hello_world callable by functions outside of this file.
+    50                                  
+    51                                  segment .data                                               ;Place initialized data here
+    52                                  
+    53                                  ;===== Declare some messages ==============================================================================================================================================
+    54                                  ;The identifiers in this segment are quadword pointers to ascii strings stored in heap space.  They are not variables.  They are not constants.  There are no constants in
+    55                                  ;assembly programming.  There are no variables in assembly programming: the registers assume the role of variables.
+    56                                  
+    57                                  align 16                                                  ;Insure that the next data declaration starts on a 16-byte boundary.
+    58                                  
+    59 00000000 506C6561736520656E-     hello_world.promptmessage db "Please enter your first and last names. ", 10, 0
+    59 00000009 74657220796F757220-
+    59 00000012 666972737420616E64-
+    59 0000001B 206C617374206E616D-
+    59 00000024 65732E200A00       
+    60                                  
+    61 0000002A 506C6561736520656E-     hello_world.outputmessage db "Please enter your title (Ms, Mr, Engineer, Programmer, Mathematician, Genius, etc) ", 0
+    61 00000033 74657220796F757220-
+    61 0000003C 7469746C6520284D73-
+    61 00000045 2C204D722C20456E67-
+    61 0000004E 696E6565722C205072-
+    61 00000057 6F6772616D6D65722C-
+    61 00000060 204D617468656D6174-
+    61 00000069 696369616E2C204765-
+    61 00000072 6E6975732C20657463-
+    61 0000007B 292000             
+    62                                  
+    63 0000007E 48656C6C6F20257320-     hello_world.greeting db "Hello %s %s How has your day been so far?", 0
+    63 00000087 257320486F77206861-
+    63 00000090 7320796F7572206461-
+    63 00000099 79206265656E20736F-
+    63 000000A2 206661723F00       
+    64                                  
+    65 000000A8 257320697320726561-     hello_world.is_nice db "%s is really nice.", 10, 0
+    65 000000B1 6C6C79206E6963652E-
+    65 000000BA 0A00               
+    66                                  
+    67 000000BC 5468697320636F6E63-     goodbye db "This concludes the demonstration of the Hello program written in x86 assembly.", 10, 0
+    67 000000C5 6C7564657320746865-
+    67 000000CE 2064656D6F6E737472-
+    67 000000D7 6174696F6E206F6620-
+    67 000000E0 7468652048656C6C6F-
+    67 000000E9 2070726F6772616D20-
+    67 000000F2 7772697474656E2069-
+    67 000000FB 6E2078383620617373-
+    67 00000104 656D626C792E0A00   
+    68                                  
+    69 0000010C 257300                  stringformat db "%s", 0                                   ;general string format
+    70                                  
+    71 0000010F 90<rept>                align 64                                                  ;Insure that the next data declaration starts on a 64-byte boundary.
+    72                                  segment .bss                                              ;Declare pointers to un-initialized space in this segment.
+    73                                  
+    74                                  
+    75 00000000 <res 00000020>          hello_world.programmers_name resb 32                      ;Create space of size 32 bytes
+    76                                  
+    77 00000020 <res 00000020>          hello_world.programmers_title resb 32                     ;Create space of size 32 bytes
+    78                                  
+    79 00000040 <res 00000020>          hello_world.programmers_day resb 32                       ;Create space of size 32 bytes
+    80                                  ;==========================================================================================================================================================================
+    81                                  ;===== Begin the application here: show how to input and output strings ===================================================================================================
+    82                                  ;==========================================================================================================================================================================
+    83                                  
+    84                                  segment .text                                         ;Place executable instructions in this segment.
+    85                                  
+    86                                  hello_world:                                          ;Entry point.  Execution begins here.
+    87                                  
+    88 00000000 55                      push rbp                                              ;This marks the start of a new stack frame belonging to this execution of this function.
+    89 00000001 4889E5                  mov  rbp, rsp                                         ;rbp holds the address of the start of this new stack frame.  When this function returns to its caller rbp must
+    90 00000004 53                      push rbx
+    91 00000005 51                      push rcx
+    92 00000006 52                      push rdx
+    93 00000007 57                      push rdi
+    94 00000008 56                      push rsi
+    95 00000009 4150                    push r8
+    96 0000000B 4151                    push r9
+    97 0000000D 4152                    push r10
+    98 0000000F 4153                    push r11
+    99 00000011 4154                    push r12
+   100 00000013 4155                    push r13
+   101 00000015 4156                    push r14
+   102 00000017 4157                    push r15
+   103 00000019 9C                      pushf
+   104                                  ;=========== Prompt for programmer's name =================================================================================================================================
+   105                                  
+   106 0000001A B800000000              mov qword  rax, 0                                     ;No data from SSE will be printed
+   107 0000001F 48BF-                   mov  rdi, stringformat                                ;"%s"
+   107 00000021 [0C01000000000000] 
+   108 00000029 48BE-                   mov  rsi, .promptmessage                              ;"Please enter your first and last names. "
+   108 0000002B [0000000000000000] 
+   109 00000033 E8(00000000)            call printf                                           ;Call a library function to make the output
+   110                                  
+   111                                  ;===== Obtain the user's name =============================================================================================================================================+
+   112                                  
+   113 00000038 B800000000              mov qword rax, 0                                       ;SSE is not involved in this scanf operation
+   114 0000003D 48BF-                   mov  rdi, hello_world.programmers_name                 ;Copy to rdi the pointer to the start of the array of 32 bytes
+   114 0000003F [0000000000000000] 
+   115 00000047 BE20000000              mov  rsi, 32                                           ;Provide to fgets the size of the storage made available for input
+   116 0000004C 488B1425[00000000]      mov  rdx, [stdin]                                      ;stdin is a pointer to the device; rdx receives the device itself
+   117 00000054 E8(00000000)            call fgets                                             ;Call the C function to get a line of text and stop when NULL is encountered or 31 chars have been stored.
+   118                                  
+   119 00000059 B800000000              mov  rax, 0
+   120 0000005E 48BF-                   mov  rdi, hello_world.programmers_name
+   120 00000060 [0000000000000000] 
+   121 00000068 E8(00000000)            call strlen                                            ;Uttilize strlen to get length of string
+   122 0000006D 4989C6                  mov  r14, rax                                          ;Copy strlen value into r14.
+   123 00000070 41BF00000000            mov  r15, 0                                            ;Require to put 0 in a register for code to work.
+   124 00000076 4D89BE[FFFFFFFF]        mov  [hello_world.programmers_name + r14 - 1], r15     ;We want to get rid of the newline characte right here.
+   125                                  
+   126                                  ;===== Ask user for title. ==================================================================================================================================================
+   127                                  
+   128 0000007D B800000000              mov  rax, 0                                           ;No data from SSE will be printed
+   129 00000082 48BF-                   mov  rdi, stringformat                                ;"%s"
+   129 00000084 [0C01000000000000] 
+   130 0000008C 48BE-                   mov  rsi, hello_world.outputmessage                   ;"Please enter your title (Ms, Mr, Engineer, Programmer, Mathematician, Genius, etc) "
+   130 0000008E [2A00000000000000] 
+   131 00000096 E8(00000000)            call printf                                           ;Call a library function to do the output
+   132                                  
+   133 0000009B B800000000              mov qword rax, 0                                      ;Inserting the title input. Same steps as for the name.
+   134 000000A0 48BF-                   mov  rdi, hello_world.programmers_title
+   134 000000A2 [2000000000000000] 
+   135 000000AA BE20000000              mov  rsi, 32
+   136 000000AF 488B1425[00000000]      mov  rdx, [stdin]
+   137 000000B7 E8(00000000)            call fgets
+   138                                  
+   139 000000BC B800000000              mov  rax, 0                                           ;Getting rid of newline character, same as for the name.
+   140 000000C1 48BF-                   mov  rdi, hello_world.programmers_title
+   140 000000C3 [2000000000000000] 
+   141 000000CB E8(00000000)            call strlen
+   142 000000D0 4989C6                  mov r14, rax
+   143 000000D3 41BF00000000            mov r15, 0
+   144 000000D9 4D89BE[1F000000]        mov [hello_world.programmers_title + r14 - 1], r15
+   145                                  
+   146                                  
+   147                                  ;==== Ask user how their day has been and tell user it is nice.
+   148                                  
+   149 000000E0 B800000000              mov  rax, 0
+   150 000000E5 48BF-                   mov  rdi, hello_world.greeting ;Asks "Hello %s %s How has your day been so far?""
+   150 000000E7 [7E00000000000000] 
+   151 000000EF 48BE-                   mov  rsi, .programmers_title ;Insert title into first %s
+   151 000000F1 [2000000000000000] 
+   152 000000F9 48BA-                   mov  rdx, .programmers_name  ;Insert title into second %s
+   152 000000FB [0000000000000000] 
+   153 00000103 E8(00000000)            call printf
+   154                                  
+   155                                  
+   156 00000108 B800000000              mov qword rax, 0                                       ;SSE is not involved in this scanf operation
+   157 0000010D 48BF-                   mov  rdi, hello_world.programmers_day                  ;Copy to rdi the pointer to the start of the array of 32 bytes
+   157 0000010F [4000000000000000] 
+   158 00000117 BE20000000              mov  rsi, 32                                           ;Provide to fgets the size of the storage made available for input
+   159 0000011C 488B1425[00000000]      mov  rdx, [stdin]                                      ;stdin is a pointer to the device; rdx receives the device itself
+   160 00000124 E8(00000000)            call fgets                                             ;Call the C function to get a line of text and stop when NULL is encountered or 31 chars have been stored.
+   161                                  
+   162 00000129 B800000000              mov  rax, 0                                           ;Getting rid of newline character, same as for the name and title
+   163 0000012E 48BF-                   mov  rdi, hello_world.programmers_day
+   163 00000130 [4000000000000000] 
+   164 00000138 E8(00000000)            call strlen
+   165 0000013D 4989C6                  mov r14, rax
+   166 00000140 41BF00000000            mov r15, 0
+   167 00000146 4D89BE[3F000000]        mov [hello_world.programmers_day + r14 - 1], r15
+   168                                  
+   169 0000014D B800000000              mov rax, 0
+   170 00000152 48BF-                   mov rdi, hello_world.is_nice
+   170 00000154 [A800000000000000] 
+   171 0000015C 48BE-                   mov rsi, .programmers_day
+   171 0000015E [4000000000000000] 
+   172 00000166 E8(00000000)            call printf
+   173                                  
+   174                                  ;======= Show farewell message ============================================================================================================================================
+   175                                  
+   176 0000016B B800000000              mov qword rax, 0                                       ;No data from SSE will be printed
+   177 00000170 48BF-                   mov  rdi, stringformat                                 ;"%s"
+   177 00000172 [0C01000000000000] 
+   178 0000017A 48BE-                   mov  rsi, goodbye                                      ;"I hope to meet you again.  Enjoy your X86 programming."
+   178 0000017C [BC00000000000000] 
+   179 00000184 E8(00000000)            call printf                                            ;Call a library function to do the output
+   180                                  
+   181                                  ;=========== Return name to program. ========================================================================================================
+   182                                  
+   183 00000189 48B8-                   mov rax, hello_world.programmers_name                ;The goal is to return a string
+   183 0000018B [0000000000000000] 
+   184                                  
+   185                                  ;===== Restore the pointer to the start of the stack frame before exiting from this function ==============================================================================
+   186                                  
+   187 00000193 9D                      popf
+   188 00000194 415F                    pop r15
+   189 00000196 415E                    pop r14
+   190 00000198 415D                    pop r13
+   191 0000019A 415C                    pop r12
+   192 0000019C 415B                    pop r11
+   193 0000019E 415A                    pop r10
+   194 000001A0 4159                    pop r9
+   195 000001A2 4158                    pop r8
+   196 000001A4 5E                      pop rsi
+   197 000001A5 5F                      pop rdi
+   198 000001A6 5A                      pop rdx
+   199 000001A7 59                      pop rcx
+   200 000001A8 5B                      pop rbx
+   201 000001A9 5D                      pop rbp               ;Restore the base pointer of the stack frame of the caller.
+   202                                  
+   203 000001AA C3                      ret
+   204                                  ;========== End of program hello_world.asm ================================================================================================================================
+   205                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**
