@@ -1,0 +1,341 @@
+     1                                  ;****************************************************************************************************************************
+     2                                  ;Program name: "Right Triangles".  TThis program demonstrates how to input and output floats with calcuations
+     3                                  ;space.  Copyright (C) 2021 Timothy Lee
+     4                                  ;This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+     5                                  ;version 3 as published by the Free Software Foundation.
+     6                                  ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+     7                                  ;warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+     8                                  ;A copy of the GNU General Public License v3 is available here:  <https://www.gnu.org/licenses/>.
+     9                                  ;****************************************************************************************************************************
+    10                                  
+    11                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**
+    12                                  ;Author information
+    13                                  ;  Author name: Timothy Lee
+    14                                  ;  Author email: timothylee43@csu.fullerton.edu
+    15                                  ;
+    16                                  ;Program information
+    17                                  ;  Program name: Right Triangles
+    18                                  ;  Programming languages X86 with one module in C++
+    19                                  ;  Date program began 9/6/21
+    20                                  ;  Date program completed 9/14/21
+    21                                  ;
+    22                                  ;Purpose
+    23                                  ;  This program will take inputs from the user and output calculations.
+    24                                  ;
+    25                                  ;Project information
+    26                                  ;  Files: pythagoras.cpp, triangle.asm, r.sh
+    27                                  ;  Status: The program has been tested extensively with no detectable errors.
+    28                                  ;
+    29                                  ;Translator information
+    30                                  ;  Linux: nasm -f elf64 -l triangle.lis -o triangle.o triangle.asm
+    31                                  ;References and credits
+    32                                  ;  Seyfarth, Chapter 11
+    33                                  
+    34                                  ;===== Begin code area =====================================================================================================================================================
+    35                                  extern printf
+    36                                  
+    37                                  extern scanf
+    38                                  
+    39                                  extern fgets
+    40                                  
+    41                                  extern stdin
+    42                                  
+    43                                  extern strlen
+    44                                  
+    45                                  global triangle
+    46                                  
+    47                                  one_half equ 0x3FE0000000000000
+    48                                  
+    49                                  segment .data
+    50                                  
+    51                                  align 16
+    52                                  
+    53 00000000 48656C6C6F20576F72-     last_name_message db "Hello World", 0
+    53 00000009 6C6400             
+    54                                  
+    55 0000000C 506C6561736520656E-     title_message db "Please enter your title (Mr, Ms, Engineer, etc): ", 0
+    55 00000015 74657220796F757220-
+    55 0000001E 7469746C6520284D72-
+    55 00000027 2C204D732C20456E67-
+    55 00000030 696E6565722C206574-
+    55 00000039 63293A2000         
+    56                                  
+    57 0000003E 506C6561736520656E-     enjoy_triangles_message db "Please enjoy your triangles %s %s.", 10, 0
+    57 00000047 6A6F7920796F757220-
+    57 00000050 747269616E676C6573-
+    57 00000059 2025732025732E0A00 
+    58                                  
+    59 00000062 506C6561736520656E-     input_dimension_message db "Please enter the sides of your triangle separated by ws: ", 0
+    59 0000006B 746572207468652073-
+    59 00000074 69646573206F662079-
+    59 0000007D 6F757220747269616E-
+    59 00000086 676C65207365706172-
+    59 0000008F 617465642062792077-
+    59 00000098 733A2000           
+    60                                  
+    61 0000009C 546865206172656120-     area_message db "The area of this triangle is %lf square units.", 10, 0
+    61 000000A5 6F6620746869732074-
+    61 000000AE 7269616E676C652069-
+    61 000000B7 7320256C6620737175-
+    61 000000C0 61726520756E697473-
+    61 000000C9 2E0A00             
+    62                                  
+    63 000000CC 546865206C656E6774-     invalid_length db "The lengths are not valid. Please enter lengths that are positive.", 10, 0
+    63 000000D5 687320617265206E6F-
+    63 000000DE 742076616C69642E20-
+    63 000000E7 506C6561736520656E-
+    63 000000F0 746572206C656E6774-
+    63 000000F9 687320746861742061-
+    63 00000102 726520706F73697469-
+    63 0000010B 76652E0A00         
+    64                                  
+    65 00000110 257300                  stringformat db "%s", 0
+    66                                  
+    67 00000113 256C6600                eight_byte_format db "%lf", 0                               ;general 8-byte float format
+    68                                  
+    69 00000117 546865206C656E6774-     hypo_message db "The length of the hypotenuse is %lf.", 10, 0
+    69 00000120 68206F662074686520-
+    69 00000129 6879706F74656E7573-
+    69 00000132 6520697320256C662E-
+    69 0000013B 0A00               
+    70                                  
+    71                                  ;testing purposes
+    72 0000013D 546865206F6E65206E-     output_one_float db "The one number is %5.3lf.",10,0
+    72 00000146 756D62657220697320-
+    72 0000014F 25352E336C662E0A00 
+    73 00000158 5468652074776F206E-     output_two_float db "The two numbers are %5.3lf and %5.3lf.",10,0
+    73 00000161 756D62657273206172-
+    73 0000016A 652025352E336C6620-
+    73 00000173 616E642025352E336C-
+    73 0000017C 662E0A00           
+    74 00000180 546865207468726565-     output_three_float db "The three numbers are %5.3lf and %5.3lf and %5.3lf",10,0
+    74 00000189 206E756D6265727320-
+    74 00000192 6172652025352E336C-
+    74 0000019B 6620616E642025352E-
+    74 000001A4 336C6620616E642025-
+    74 000001AD 352E336C660A00     
+    75                                  
+    76 000001B4 90<rept>                align 64
+    77                                  
+    78                                  segment .bss
+    79                                  
+    80 00000000 <res 00000020>          last_name resb 32
+    81                                  
+    82 00000020 <res 00000020>          title resb 32
+    83                                  
+    84                                  
+    85                                  segment .text
+    86                                  
+    87                                  triangle:
+    88                                  
+    89 00000000 55                      push rbp                                              ;This marks the start of a new stack frame belonging to this execution of this function.
+    90 00000001 4889E5                  mov  rbp, rsp                                         ;rbp holds the address of the start of this new stack frame.  When this function returns to its caller rbp must
+    91 00000004 53                      push rbx
+    92 00000005 51                      push rcx
+    93 00000006 52                      push rdx
+    94 00000007 57                      push rdi
+    95 00000008 56                      push rsi
+    96 00000009 4150                    push r8
+    97 0000000B 4151                    push r9
+    98 0000000D 4152                    push r10
+    99 0000000F 4153                    push r11
+   100 00000011 4154                    push r12
+   101 00000013 4155                    push r13
+   102 00000015 4156                    push r14
+   103 00000017 4157                    push r15
+   104 00000019 9C                      pushf
+   105                                  
+   106                                  ;=========== Prompt for programmer's last name =================================================================================================================================
+   107                                  
+   108 0000001A B800000000              mov qword  rax, 0                                     ;No data from SSE will be printed
+   109 0000001F 48BF-                   mov  rdi, stringformat                                ;"%s"
+   109 00000021 [1001000000000000] 
+   110 00000029 48BE-                   mov  rsi, last_name_message                           ;"Please enter your first and last names. "
+   110 0000002B [0000000000000000] 
+   111 00000033 E8(00000000)            call printf                                           ;Call a library function to make the output
+   112                                  
+   113                                  ;ask for input of title
+   114 00000038 B800000000              mov qword rax, 0
+   115 0000003D 48BF-                   mov rdi, last_name
+   115 0000003F [0000000000000000] 
+   116 00000047 BE20000000              mov rsi, 32
+   117 0000004C 488B1425[00000000]      mov rdx, [stdin]
+   118 00000054 E8(00000000)            call fgets
+   119                                  
+   120                                  ;we remove the new line character in this code block
+   121 00000059 B800000000              mov rax, 0
+   122 0000005E 48BF-                   mov rdi, last_name
+   122 00000060 [0000000000000000] 
+   123 00000068 E8(00000000)            call strlen
+   124 0000006D 4989C6                  mov r14, rax
+   125 00000070 41BF00000000            mov r15, 0
+   126 00000076 4D89BE[FFFFFFFF]        mov [last_name + r14 - 1], r15
+   127                                  
+   128                                  ;=========== Prompt for programmer's title name =================================================================================================================================
+   129 0000007D B800000000              mov qword rax, 0
+   130 00000082 48BF-                   mov rdi, stringformat
+   130 00000084 [1001000000000000] 
+   131 0000008C 48BE-                   mov rsi, title_message
+   131 0000008E [0C00000000000000] 
+   132 00000096 E8(00000000)            call printf
+   133                                  
+   134                                  ;ask for input of title
+   135 0000009B B800000000              mov qword rax, 0
+   136 000000A0 48BF-                   mov rdi, title
+   136 000000A2 [2000000000000000] 
+   137 000000AA BE20000000              mov rsi, 32
+   138 000000AF 488B1425[00000000]      mov rdx, [stdin]
+   139 000000B7 E8(00000000)            call fgets
+   140                                  
+   141                                  ;we remove the new line character in this code block
+   142 000000BC B800000000              mov rax, 0
+   143 000000C1 48BF-                   mov rdi, title
+   143 000000C3 [2000000000000000] 
+   144 000000CB E8(00000000)            call strlen
+   145 000000D0 4989C6                  mov r14, rax
+   146 000000D3 41BF00000000            mov r15, 0
+   147 000000D9 4D89BE[1F000000]        mov [title + r14 - 1], r15
+   148                                  
+   149                                  ;=========== Ask user for base and height of the triangle =================================================================================================================================
+   150 000000E0 B800000000              mov qword rax, 0
+   151 000000E5 48BF-                   mov rdi, stringformat
+   151 000000E7 [1001000000000000] 
+   152 000000EF 48BE-                   mov rsi, input_dimension_message
+   152 000000F1 [6200000000000000] 
+   153 000000F9 E8(00000000)            call printf
+   154                                  
+   155                                  ;get the base floating point number from the user
+   156 000000FE 6A00                    push qword 0                                                ;Reserve 8 bytes of storage for the incoming number
+   157 00000100 6AFF                    push qword -1                                               ;Need extra push to line up to multiple of 16 bit
+   158 00000102 B800000000              mov qword  rax, 0                                           ;SSE is not involved in this scanf operation
+   159 00000107 48BF-                   mov   rdi, eight_byte_format                           ;"%lf"
+   159 00000109 [1301000000000000] 
+   160 00000111 4889E6                  mov   rsi, rsp                                         ;Give scanf a point to the reserved storage
+   161 00000114 E8(00000000)            call  scanf                                            ;Call a library function to do the input work
+   162 00000119 F2440F102424            movsd xmm12, [rsp]                                      ;Copy the inputted number to xmm0
+   163 0000011F 58                      pop rax                                              ;Make free the storage that was used by scanf
+   164 00000120 58                      pop rax
+   165                                  
+   166                                  ;get the height floating point number from the user
+   167 00000121 6A00                    push qword 0
+   168 00000123 6AFF                    push qword -1
+   169 00000125 B800000000              mov qword  rax, 0
+   170 0000012A 48BF-                   mov   rdi, eight_byte_format
+   170 0000012C [1301000000000000] 
+   171 00000134 4889E6                  mov   rsi, rsp
+   172 00000137 E8(00000000)            call  scanf
+   173 0000013C F2440F102C24            movsd xmm13, [rsp]
+   174 00000142 58                      pop rax
+   175 00000143 58                      pop rax
+   176                                  
+   177                                  ;push 0 into the register
+   178 00000144 6A00                    push qword 0
+   179 00000146 F2440F101C24            movsd xmm11, [rsp]
+   180 0000014C 58                      pop rax
+   181                                  
+   182                                  ;check to see if value is greater than 0
+   183 0000014D 66450F2EE3              ucomisd xmm12, xmm11
+   184 00000152 7723                    ja check_first
+   185                                  
+   186                                  ;print out invalid value and go to end of code.
+   187 00000154 B800000000              mov rax, 0
+   188 00000159 48BF-                   mov rdi, stringformat
+   188 0000015B [1001000000000000] 
+   189 00000163 48BE-                   mov rsi, invalid_length
+   189 00000165 [CC00000000000000] 
+   190 0000016D E8(00000000)            call printf
+   191 00000172 E9D6000000              jmp continue
+   192                                  
+   193                                  ;=========== Calculate the area of the triangle =================================================================================================================================
+   194                                  check_first:
+   195                                  ;if first value is valid, check second lenght is valid as well
+   196 00000177 6A00                    push qword 0
+   197 00000179 F2440F101C24            movsd xmm11, [rsp]
+   198 0000017F 58                      pop rax
+   199                                  
+   200                                  ;make sure 2nd length is also greater than 0
+   201 00000180 66450F2EEB              ucomisd xmm13, xmm11
+   202 00000185 7723                    ja check_second
+   203                                  
+   204                                  ;if not valid, print that length is invalid and go to end of code.
+   205 00000187 B800000000              mov rax, 0
+   206 0000018C 48BF-                   mov rdi, stringformat
+   206 0000018E [1001000000000000] 
+   207 00000196 48BE-                   mov rsi, invalid_length
+   207 00000198 [CC00000000000000] 
+   208 000001A0 E8(00000000)            call printf
+   209 000001A5 E9A3000000              jmp continue
+   210                                  
+   211                                  ;after both lengths are valid, beging to find the area.
+   212                                  check_second:
+   213 000001AA 48BB000000000000E0-     mov rbx, one_half ;place 0.5 into rbx
+   213 000001B3 3F                 
+   214 000001B4 53                      push rbx ;push rbx into the stack
+   215 000001B5 F2450F10D4              movsd xmm10, xmm12 ;need to move to new registers
+   216 000001BA F2450F10DD              movsd xmm11, xmm13  ;need to move to new registers
+   217 000001BF F2440F103C24            movsd xmm15, [rsp] ;need to copy 0.5 into another register to work.
+   218 000001C5 F2450F59DF              mulsd xmm11, xmm15; multiply and save to xmm13
+   219 000001CA F2450F59D3              mulsd xmm10, xmm11
+   220                                  
+   221 000001CF 58                      pop rax
+   222                                  
+   223                                  ;rint out the area of the triangle
+   224 000001D0 B801000000              mov rax, 1
+   225 000001D5 48BF-                   mov rdi, area_message
+   225 000001D7 [9C00000000000000] 
+   226 000001DF F2410F10C2              movsd xmm0, xmm10
+   227 000001E4 E8(00000000)            call printf
+   228                                  
+   229                                  ;=========== Calculate the hypotenuse=================================================================================================================================
+   230 000001E9 F2410F10EC              movsd xmm5, xmm12 ;mov to new register
+   231 000001EE F2410F10F5              movsd xmm6, xmm13 ;mov to new register
+   232 000001F3 F20F59ED                mulsd xmm5, xmm5 ;square the value of the base
+   233 000001F7 F20F59F6                mulsd xmm6, xmm6 ;square the value of the height
+   234 000001FB F20F58EE                addsd xmm5, xmm6 ;sum the two squares
+   235 000001FF F20F51ED                sqrtsd xmm5,xmm5 ;take square root to find the hypotenuse
+   236                                  
+   237                                  ;print the hypotenuse
+   238 00000203 B801000000              mov rax, 1
+   239 00000208 48BF-                   mov rdi, hypo_message
+   239 0000020A [1701000000000000] 
+   240 00000212 F20F10C5                movsd xmm0, xmm5
+   241 00000216 F2440F10FD              movsd xmm15, xmm5
+   242 0000021B E8(00000000)            call printf
+   243                                  
+   244                                  ;=========== Print title + name =================================================================================================================================
+   245 00000220 B800000000              mov qword rax, 0
+   246 00000225 48BF-                   mov rdi, enjoy_triangles_message
+   246 00000227 [3E00000000000000] 
+   247 0000022F 48BE-                   mov rsi, title
+   247 00000231 [2000000000000000] 
+   248 00000239 48BA-                   mov rdx, last_name
+   248 0000023B [0000000000000000] 
+   249 00000243 E8(00000000)            call printf
+   250                                  
+   251                                  ;save hypotenuse as the return value of the function                           ;
+   252 00000248 F2410F10C7              movsd xmm0, xmm15
+   253                                  
+   254                                                                          ;
+   255                                  
+   256                                  ;===== Restore the pointer to the start of the stack frame before exiting from this function ==============================================================================
+   257                                  continue:
+   258 0000024D 9D                      popf
+   259 0000024E 415F                    pop r15
+   260 00000250 415E                    pop r14
+   261 00000252 415D                    pop r13
+   262 00000254 415C                    pop r12
+   263 00000256 415B                    pop r11
+   264 00000258 415A                    pop r10
+   265 0000025A 4159                    pop r9
+   266 0000025C 4158                    pop r8
+   267 0000025E 5E                      pop rsi
+   268 0000025F 5F                      pop rdi
+   269 00000260 5A                      pop rdx
+   270 00000261 59                      pop rcx
+   271 00000262 5B                      pop rbx
+   272 00000263 5D                      pop rbp               ;Restore the base pointer of the stack frame of the caller.
+   273                                  
+   274 00000264 C3                      ret
+   275                                  
+   276                                  ;========== End of program hello_world.asm ================================================================================================================================
+   277                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**

@@ -1,0 +1,17 @@
+b main
+b 57
+b triangle.asm:118
+info b
+r
+c
+c
+p/x &last_name_message
+x/1c 4 + (char*)&last_name_message
+x_s &last_name_message
+p/d ($rbp-$rsp)/8+1
+p/u $xmm2.v2_int64[0]
+c
+c
+c
+c
+q
