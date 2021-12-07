@@ -1,0 +1,55 @@
+b main
+b 56
+b 58
+info b
+r
+c
+p/x $rbp
+p/x $rsp
+p/d ($rbp-$rsp)/8+1
+c
+c
+c
+c
+c
+c
+q
+
+
+
+n
+n
+n
+p/x $rsp
+p/x $rbp
+p/t $rip
+p/d $rdx
+p/x $rsp
+p/d ($rbp-$rsp)/8+1
+p/x $rbp
+x/1xg $rsp
+x/1xg $rbp
+
+n
+s
+n
+n
+n
+n
+n
+n
+n
+n
+n
+n
+n
+n
+n
+n
+n
+i r
+
+b triangle.asm:90
+b triangle.asm:104
+b triangle.asm:231
+b triangle.asm:252
