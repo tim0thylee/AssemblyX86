@@ -1,0 +1,15 @@
+b main
+b hertz.asm:130
+r
+n
+n
+n
+x/1xg $rsp
+s
+c
+n
+timothy lee
+x/s &name0
+c
+c
+c

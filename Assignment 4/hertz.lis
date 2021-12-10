@@ -1,0 +1,320 @@
+     1                                  ;****************************************************************************************************************************
+     2                                  ;Program name: "Power Unlimited".  This program demonstrates how to input and output floats with calcuations
+     3                                  ;space.  Copyright (C) 2021 Timothy Lee
+     4                                  ;This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+     5                                  ;version 3 as published by the Free Software Foundation.
+     6                                  ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+     7                                  ;warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+     8                                  ;A copy of the GNU General Public License v3 is available here:  <https://www.gnu.org/licenses/>.
+     9                                  ;****************************************************************************************************************************
+    10                                  
+    11                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**
+    12                                  ;Author information
+    13                                  ;  Author name: Timothy Lee
+    14                                  ;  Author email: timothylee43@csu.fullerton.edu
+    15                                  ;
+    16                                  ;Program information
+    17                                  ;  Program name: Power Unlimited
+    18                                  ;  Programming languages X86 with one module in C++
+    19                                  ;  Date program began 11/12/21
+    20                                  ;  Date program completed 11/14/21
+    21                                  ;
+    22                                  ;Purpose
+    23                                  ;  This program will take inputs from the user and output calculations.
+    24                                  ;
+    25                                  ;Project information
+    26                                  ;  Files: maxwell.cpp, isfloat.cpp, hertz.asm, r.sh, rg.sh
+    27                                  ;  Status: The program has been tested extensively with no detectable errors.
+    28                                  ;
+    29                                  ;Translator information
+    30                                  ;  Linux: nasm -f elf64 -l triangle.lis -o triangle.o triangle.asm
+    31                                  ;References and credits
+    32                                  ;  Seyfarth, Chapter 11
+    33                                  
+    34                                  ;===== Begin code area =====================================================================================================================================================
+    35                                  extern printf
+    36                                  
+    37                                  extern scanf
+    38                                  
+    39                                  extern fgets
+    40                                  
+    41                                  extern stdin
+    42                                  
+    43                                  extern strlen
+    44                                  
+    45                                  extern isfloat
+    46                                  
+    47                                  extern atof
+    48                                  
+    49                                  global hertz
+    50                                  
+    51                                  one_half equ 0x3FE0000000000000
+    52                                  
+    53                                  segment .data
+    54                                  
+    55                                  align 16
+    56                                  
+    57 00000000 57652077696C6C2066-     greeting_message db "We will find your answer.", 10, 0
+    57 00000009 696E6420796F757220-
+    57 00000012 616E737765722E0A00 
+    58                                  
+    59 0000001B 506C6561736520656E-     name_message db "Please enter your name. You choose the format of your name: ", 0
+    59 00000024 74657220796F757220-
+    59 0000002D 6E616D652E20596F75-
+    59 00000036 2063686F6F73652074-
+    59 0000003F 686520666F726D6174-
+    59 00000048 206F6620796F757220-
+    59 00000051 6E616D653A2000     
+    60                                  
+    61 00000058 57656C636F6D652025-     welcome_message db "Welcome %s", 10, 0
+    61 00000061 730A00             
+    62                                  
+    63 00000064 506C6561736520656E-     resistance_message db "Please enter the resistance in your circuit: ", 0
+    63 0000006D 746572207468652072-
+    63 00000076 6573697374616E6365-
+    63 0000007F 20696E20796F757220-
+    63 00000088 636972637569743A20-
+    63 00000091 00                 
+    64                                  
+    65 00000092 506C6561736520656E-     current_message db "Please enter the current flow in the circuit: ", 0
+    65 0000009B 746572207468652063-
+    65 000000A4 757272656E7420666C-
+    65 000000AD 6F7720696E20746865-
+    65 000000B6 20636972637569743A-
+    65 000000BF 2000               
+    66                                  
+    67 000000C1 546865206172656120-     area_message db "The area of this triangle is %lf square units.", 10, 0
+    67 000000CA 6F6620746869732074-
+    67 000000D3 7269616E676C652069-
+    67 000000DC 7320256C6620737175-
+    67 000000E5 61726520756E697473-
+    67 000000EE 2E0A00             
+    68                                  
+    69 000000F1 496E76616C69642069-     invalid_float db "Invalid input detected.  You may run this program again.", 10, 0
+    69 000000FA 6E7075742064657465-
+    69 00000103 637465642E2020596F-
+    69 0000010C 75206D61792072756E-
+    69 00000115 20746869732070726F-
+    69 0000011E 6772616D2061676169-
+    69 00000127 6E2E0A00           
+    70                                  
+    71 0000012B 5468616E6B20796F75-     thank_you_message db "Thank you %s. Your power consumptions is %lf watts.", 10, 0
+    71 00000134 2025732E20596F7572-
+    71 0000013D 20706F77657220636F-
+    71 00000146 6E73756D7074696F6E-
+    71 0000014F 7320697320256C6620-
+    71 00000158 77617474732E0A00   
+    72                                  
+    73 00000160 257300                  stringformat db "%s", 0
+    74                                  
+    75 00000163 256C6600                eight_byte_format db "%lf", 0                               ;general 8-byte float format
+    76                                  
+    77 00000167 256400                  int_format db "%d", 0 ;debugging purposes
+    78                                  
+    79 0000016A 546865206C656E6774-     hypo_message db "The length of the hypotenuse is %lf.", 10, 0
+    79 00000173 68206F662074686520-
+    79 0000017C 6879706F74656E7573-
+    79 00000185 6520697320256C662E-
+    79 0000018E 0A00               
+    80                                  
+    81                                  ;testing purposes
+    82 00000190 546865206F6E65206E-     output_one_float db "The one number is %5.3lf.",10,0
+    82 00000199 756D62657220697320-
+    82 000001A2 25352E336C662E0A00 
+    83 000001AB 5468652074776F206E-     output_two_float db "The two numbers are %5.3lf and %5.3lf.",10,0
+    83 000001B4 756D62657273206172-
+    83 000001BD 652025352E336C6620-
+    83 000001C6 616E642025352E336C-
+    83 000001CF 662E0A00           
+    84 000001D3 546865207468726565-     output_three_float db "The three numbers are %5.3lf and %5.3lf and %5.3lf",10,0
+    84 000001DC 206E756D6265727320-
+    84 000001E5 6172652025352E336C-
+    84 000001EE 6620616E642025352E-
+    84 000001F7 336C6620616E642025-
+    84 00000200 352E336C660A00     
+    85                                  
+    86 00000207 90<rept>                align 64
+    87                                  
+    88                                  segment .bss
+    89                                  
+    90 00000000 <res 00000020>          name0 resb 32
+    91 00000020 <res 00000020>          resistance resb 32
+    92 00000040 <res 00000020>          current resb 32
+    93                                  
+    94                                  segment .text
+    95                                  
+    96                                  hertz:
+    97                                  
+    98 00000000 55                      push rbp                                              ;This marks the start of a new stack frame belonging to this execution of this function.
+    99 00000001 4889E5                  mov  rbp, rsp                                         ;rbp holds the address of the start of this new stack frame.  When this function returns to its caller rbp must
+   100 00000004 53                      push rbx
+   101 00000005 51                      push rcx
+   102 00000006 52                      push rdx
+   103 00000007 57                      push rdi
+   104 00000008 56                      push rsi
+   105 00000009 4150                    push r8
+   106 0000000B 4151                    push r9
+   107 0000000D 4152                    push r10
+   108 0000000F 4153                    push r11
+   109 00000011 4154                    push r12
+   110 00000013 4155                    push r13
+   111 00000015 4156                    push r14
+   112 00000017 4157                    push r15
+   113 00000019 9C                      pushf
+   114                                  
+   115                                  ;=========== Prompt for programmer's name and print =================================================================================================================================
+   116 0000001A B800000000              mov qword rax, 0
+   117 0000001F 48BF-                   mov rdi, stringformat
+   117 00000021 [6001000000000000] 
+   118 00000029 48BE-                   mov rsi, greeting_message
+   118 0000002B [0000000000000000] 
+   119 00000033 E8(00000000)            call printf
+   120                                  
+   121 00000038 B800000000              mov qword rax, 0
+   122 0000003D 48BF-                   mov rdi, stringformat
+   122 0000003F [6001000000000000] 
+   123 00000047 48BE-                   mov rsi, name_message
+   123 00000049 [1B00000000000000] 
+   124 00000051 E8(00000000)            call printf
+   125                                  
+   126 00000056 B800000000              mov qword rax, 0 ;Receive input for the user's name
+   127 0000005B 48BF-                   mov rdi, name0
+   127 0000005D [0000000000000000] 
+   128 00000065 BE20000000              mov rsi, 32
+   129 0000006A 488B1425[00000000]      mov rdx, [stdin]
+   130 00000072 E8(00000000)            call fgets
+   131                                  
+   132                                  ; we remove the new line character in this code block
+   133 00000077 B800000000              mov rax, 0
+   134 0000007C 48BF-                   mov rdi, name0
+   134 0000007E [0000000000000000] 
+   135 00000086 E8(00000000)            call strlen
+   136 0000008B 4989C6                  mov r14, rax
+   137 0000008E 41BF00000000            mov r15, 0
+   138 00000094 4D89BE[FFFFFFFF]        mov [name0 + r14 - 1], r15
+   139                                  
+   140 0000009B B800000000              mov qword rax, 0 ;Output the user's name
+   141 000000A0 48BF-                   mov rdi, welcome_message
+   141 000000A2 [5800000000000000] 
+   142 000000AA 48BE-                   mov rsi, name0
+   142 000000AC [0000000000000000] 
+   143 000000B4 E8(00000000)            call printf
+   144                                  
+   145                                  ;=========== Ask user for resistance and circuit and check if valid float =================================================================================================================================
+   146 000000B9 B800000000              mov qword rax, 0
+   147 000000BE 48BF-                   mov rdi, stringformat
+   147 000000C0 [6001000000000000] 
+   148 000000C8 48BE-                   mov rsi, resistance_message
+   148 000000CA [6400000000000000] 
+   149 000000D2 E8(00000000)            call printf
+   150                                  
+   151 000000D7 B800000000              mov qword rax, 0 ;Use scanf for resistance because we dont want any whitespace
+   152 000000DC 48BF-                   mov rdi, stringformat
+   152 000000DE [6001000000000000] 
+   153 000000E6 48BE-                   mov rsi, resistance
+   153 000000E8 [2000000000000000] 
+   154 000000F0 E8(00000000)            call scanf
+   155                                  
+   156 000000F5 B800000000              mov qword rax, 0 ;Check if the string resistance is actually a valid float
+   157 000000FA 48BF-                   mov rdi, resistance
+   157 000000FC [2000000000000000] 
+   158 00000104 E8(00000000)            call isfloat
+   159                                  
+   160                                  ;If the isfloat returns 0, we want to skip to error_input
+   161 00000109 4989C5                  mov r13, rax
+   162 0000010C 4983FD00                cmp r13, 0
+   163 00000110 745B                    je error_input
+   164                                  
+   165                                  ;Now do the same as the above, but for the current
+   166 00000112 B800000000              mov qword rax, 0
+   167 00000117 48BF-                   mov rdi, stringformat
+   167 00000119 [6001000000000000] 
+   168 00000121 48BE-                   mov rsi, current_message
+   168 00000123 [9200000000000000] 
+   169 0000012B E8(00000000)            call printf
+   170                                  
+   171 00000130 B800000000              mov qword rax, 0
+   172 00000135 48BF-                   mov rdi, stringformat
+   172 00000137 [6001000000000000] 
+   173 0000013F 48BE-                   mov rsi, current
+   173 00000141 [4000000000000000] 
+   174 00000149 E8(00000000)            call scanf
+   175                                  
+   176 0000014E B800000000              mov qword rax, 0 ;Check if the string current is actually a valid float
+   177 00000153 48BF-                   mov rdi, current
+   177 00000155 [4000000000000000] 
+   178 0000015D E8(00000000)            call isfloat
+   179                                  
+   180                                  ;If the isfloat returns 0, we want to skip to error_input
+   181 00000162 4989C5                  mov r13, rax
+   182 00000165 4983FD00                cmp r13, 0
+   183 00000169 7402                    je error_input
+   184                                  
+   185                                  ;If all valid inputs, jump to valid_input
+   186 0000016B EB20                    jmp valid_input
+   187                                  ;=========== Invalid float block=================================================================================================================================
+   188                                  
+   189                                  error_input:
+   190 0000016D B800000000              mov qword rax, 0
+   191 00000172 48BF-                   mov rdi, stringformat
+   191 00000174 [6001000000000000] 
+   192 0000017C 48BE-                   mov rsi, invalid_float
+   192 0000017E [F100000000000000] 
+   193 00000186 E8(00000000)            call printf
+   194 0000018B EB73                    jmp end_program ;output program is not valid and jump to end_program
+   195                                  
+   196                                  ;===== Valid float block ==============================================================================
+   197                                  valid_input:
+   198                                  
+   199                                  ;Convert circuit and current into a float using atof
+   200 0000018D B801000000              mov rax, 1
+   201 00000192 48BF-                   mov rdi, resistance
+   201 00000194 [2000000000000000] 
+   202 0000019C E8(00000000)            call atof
+   203 000001A1 F2440F10F0              movsd xmm14, xmm0
+   204                                  
+   205 000001A6 B801000000              mov rax, 1
+   206 000001AB 48BF-                   mov rdi, current
+   206 000001AD [4000000000000000] 
+   207 000001B5 E8(00000000)            call atof
+   208 000001BA F2440F10F8              movsd xmm15, xmm0
+   209                                  
+   210                                  ;Do the calculation P = I^2 x R, where I is current and R is resistance
+   211 000001BF F2450F10D6              movsd xmm10, xmm14
+   212 000001C4 F2450F10DF              movsd xmm11, xmm15
+   213 000001C9 F2450F59DB              mulsd xmm11, xmm11 ;Multiply current to itself and store in xmm15
+   214 000001CE F2450F59D3              mulsd xmm10, xmm11 ;Multiply current x resistance and store in xmm15
+   215 000001D3 F2450F10FA              movsd xmm15, xmm10 ;Store into xmm15, a safer register
+   216                                  
+   217                                  
+   218                                  ;output the name and power;
+   219 000001D8 B801000000              mov rax, 1
+   220 000001DD 48BF-                   mov rdi, thank_you_message
+   220 000001DF [2B01000000000000] 
+   221 000001E7 48BE-                   mov rsi, name0
+   221 000001E9 [0000000000000000] 
+   222 000001F1 F2410F10C7              movsd xmm0, xmm15
+   223 000001F6 E8(00000000)            call printf
+   224                                  
+   225 000001FB F2410F10C7              movsd xmm0, xmm15
+   226                                  
+   227                                  end_program:
+   228 00000200 9D                      popf
+   229 00000201 415F                    pop r15
+   230 00000203 415E                    pop r14
+   231 00000205 415D                    pop r13
+   232 00000207 415C                    pop r12
+   233 00000209 415B                    pop r11
+   234 0000020B 415A                    pop r10
+   235 0000020D 4159                    pop r9
+   236 0000020F 4158                    pop r8
+   237 00000211 5E                      pop rsi
+   238 00000212 5F                      pop rdi
+   239 00000213 5A                      pop rdx
+   240 00000214 59                      pop rcx
+   241 00000215 5B                      pop rbx
+   242 00000216 5D                      pop rbp               ;Restore the base pointer of the stack frame of the caller.
+   243                                  
+   244 00000217 C3                      ret
+   245                                  
+   246                                  ;========== End of program hertz.asm ================================================================================================================================
