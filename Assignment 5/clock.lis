@@ -1,0 +1,245 @@
+     1                                  ;****************************************************************************************************************************
+     2                                  ;Program name: "Execution Time".  This program demonstrates how to input and output floats with calcuations
+     3                                  ;space.  Copyright (C) 2021 Timothy Lee
+     4                                  ;This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License
+     5                                  ;version 3 as published by the Free Software Foundation.
+     6                                  ;This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+     7                                  ;warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+     8                                  ;A copy of the GNU General Public License v3 is available here:  <https://www.gnu.org/licenses/>.
+     9                                  ;****************************************************************************************************************************
+    10                                  
+    11                                  ;========1=========2=========3=========4=========5=========6=========7=========8=========9=========0=========1=========2=========3=========4=========5=========6=========7**
+    12                                  ;Author information
+    13                                  ;  Author name: Timothy Lee
+    14                                  ;  Author email: timothylee43@csu.fullerton.edu
+    15                                  ;
+    16                                  ;Program information
+    17                                  ;  Program name: Power Unlimited
+    18                                  ;  Programming languages X86 with one module in C++
+    19                                  ;  Date program began 12/1/21
+    20                                  ;  Date program completed 12/3/21
+    21                                  ;
+    22                                  ;Purpose
+    23                                  ;  This program will take inputs from the user and output calculations.
+    24                                  ;
+    25                                  ;Project information
+    26                                  ;  Files: main.cpp, clock.asm, r.sh
+    27                                  ;  Status: The program has been tested extensively with no detectable errors.
+    28                                  ;
+    29                                  ;Translator information
+    30                                  ;  Linux: nasm -f elf64 -l triangle.lis -o triangle.o triangle.asm
+    31                                  ;References and credits
+    32                                  ;  Seyfarth, Chapter 11
+    33                                  
+    34                                  ;===== Begin code area =====================================================================================================================================================
+    35                                  extern printf
+    36                                  
+    37                                  extern scanf
+    38                                  
+    39                                  extern fgets
+    40                                  
+    41                                  extern stdin
+    42                                  
+    43                                  extern strlen
+    44                                  
+    45                                  extern isfloat
+    46                                  
+    47                                  extern atof
+    48                                  
+    49                                  extern clock_speed
+    50                                  
+    51                                  global clock_exec
+    52                                  
+    53                                  one_half equ 0x3FE0000000000000
+    54                                  
+    55                                  gravity equ 0x4023999999999999
+    56                                  
+    57                                  segment .data
+    58                                  
+    59                                  align 16
+    60                                  
+    61 00000000 546865206375727265-     current_clock_message db "The current clock time is %ld tics.", 10, 0
+    61 00000009 6E7420636C6F636B20-
+    61 00000012 74696D652069732025-
+    61 0000001B 6C6420746963732E0A-
+    61 00000024 00                 
+    62                                  
+    63 00000025 506C6561736520656E-     height_message db "Please enter the height in meters of the dropped marble: ", 0
+    63 0000002E 746572207468652068-
+    63 00000037 656967687420696E20-
+    63 00000040 6D6574657273206F66-
+    63 00000049 207468652064726F70-
+    63 00000052 706564206D6172626C-
+    63 0000005B 653A2000           
+    64                                  
+    65 0000005F 546865206D6172626C-     seconds_message db "The marble will reach earth after %lf seconds.", 10, 0
+    65 00000068 652077696C6C207265-
+    65 00000071 616368206561727468-
+    65 0000007A 20616674657220256C-
+    65 00000083 66207365636F6E6473-
+    65 0000008C 2E0A00             
+    66                                  
+    67 0000008F 546865206578656375-     tics_time_message db "The execution time was %ld tics which equals to %lf ns", 10, 0
+    67 00000098 74696F6E2074696D65-
+    67 000000A1 2077617320256C6420-
+    67 000000AA 746963732077686963-
+    67 000000B3 6820657175616C7320-
+    67 000000BC 746F20256C66206E73-
+    67 000000C5 0A00               
+    68                                  
+    69 000000C7 54696D6F7468792077-     final_message db "Timothy wishes you a Nice Day.", 10, 0
+    69 000000D0 697368657320796F75-
+    69 000000D9 2061204E6963652044-
+    69 000000E2 61792E0A00         
+    70                                  
+    71 000000E7 257300                  stringformat db "%s", 0
+    72                                  
+    73 000000EA 256C6600                eight_byte_format db "%lf", 0                               ;general 8-byte float format
+    74                                  
+    75 000000EE 256400                  int_format db "%d", 0 ;debugging purposes
+    76                                  
+    77 000000F1 90<rept>                align 64
+    78                                  
+    79                                  segment .bss
+    80                                  
+    81 00000000 <res 00000020>          name0 resb 32
+    82 00000020 <res 00000020>          resistance resb 32
+    83 00000040 <res 00000020>          current resb 32
+    84                                  
+    85                                  segment .text
+    86                                  
+    87                                  clock_exec:
+    88                                  
+    89 00000000 55                      push rbp                                              ;This marks the start of a new stack frame belonging to this execution of this function.
+    90 00000001 4889E5                  mov  rbp, rsp                                         ;rbp holds the address of the start of this new stack frame.  When this function returns to its caller rbp must
+    91 00000004 53                      push rbx
+    92 00000005 51                      push rcx
+    93 00000006 52                      push rdx
+    94 00000007 57                      push rdi
+    95 00000008 56                      push rsi
+    96 00000009 4150                    push r8
+    97 0000000B 4151                    push r9
+    98 0000000D 4152                    push r10
+    99 0000000F 4153                    push r11
+   100 00000011 4154                    push r12
+   101 00000013 4155                    push r13
+   102 00000015 4156                    push r14
+   103 00000017 4157                    push r15
+   104 00000019 9C                      pushf
+   105                                  
+   106                                  ;=========== Measure tics and print to user================================================================================================================================
+   107 0000001A B800000000              mov rax, 0
+   108 0000001F BA00000000              mov rdx, 0
+   109                                  
+   110 00000024 0FA2                    cpuid ;Identifies the type of cpu being used on pc.
+   111 00000026 0F31                    rdtsc ;Counts the number of cycles/tics occured since pc reset.
+   112                                  
+   113 00000028 48C1E220                shl rdx, 32 ;shift left 32
+   114 0000002C 4801D0                  add rax, rdx ;now add
+   115 0000002F 4989C6                  mov r14, rax ;store into r14
+   116                                  
+   117 00000032 B800000000              mov qword rax, 0
+   118 00000037 48BF-                   mov rdi, current_clock_message
+   118 00000039 [0000000000000000] 
+   119 00000041 4C89F6                  mov rsi, r14
+   120 00000044 E8(00000000)            call printf
+   121                                  ;=========== Retrieve the height of the marble from user and calculate time to reach earth================================================================================================================================
+   122 00000049 B800000000              mov qword rax, 0
+   123 0000004E 48BF-                   mov rdi, stringformat
+   123 00000050 [E700000000000000] 
+   124 00000058 48BE-                   mov rsi, height_message
+   124 0000005A [2500000000000000] 
+   125 00000062 E8(00000000)            call printf
+   126                                  
+   127                                  ;receive height of floating points number
+   128 00000067 6A00                    push qword 0
+   129 00000069 6AFF                    push qword -1
+   130 0000006B B800000000              mov qword rax, 0
+   131 00000070 48BF-                   mov rdi, eight_byte_format
+   131 00000072 [EA00000000000000] 
+   132 0000007A 4889E6                  mov rsi, rsp
+   133 0000007D E8(00000000)            call scanf
+   134 00000082 F2440F103C24            movsd xmm15,[rsp] ;store height in xmm15
+   135 00000088 58                      pop rax
+   136 00000089 58                      pop rax
+   137                                  
+   138 0000008A 48BB99999999999923-     mov rbx, gravity
+   138 00000093 40                 
+   139 00000094 53                      push rbx
+   140 00000095 F2440F103424            movsd xmm14, [rsp] ;store 9.8 in xmm14
+   141 0000009B 58                      pop rax
+   142                                  
+   143 0000009C 48BB000000000000E0-     mov rbx, one_half
+   143 000000A5 3F                 
+   144 000000A6 53                      push rbx
+   145 000000A7 F2440F593424            mulsd xmm14, [rsp] ;multiply 9.8 by 0.5
+   146 000000AD F2450F5EFE              divsd xmm15, xmm14 ;divide height by (9.8 * 0.5)
+   147 000000B2 F2450F51FF              sqrtsd xmm15, xmm15 ;sqrt xmm15 and store and xmm15
+   148 000000B7 58                      pop rax
+   149                                  
+   150 000000B8 B801000000              mov rax, 1
+   151 000000BD 48BF-                   mov rdi, seconds_message
+   151 000000BF [5F00000000000000] 
+   152 000000C7 F2410F10C7              movsd xmm0, xmm15
+   153 000000CC E8(00000000)            call printf
+   154                                  
+   155                                  ;=========== Call clock again, and calculate time for execution in nanoseconds================================================================================================================================
+   156 000000D1 B800000000              mov rax, 0
+   157 000000D6 BA00000000              mov rdx, 0
+   158                                  
+   159 000000DB 0FA2                    cpuid ;Identifies the type of cpu being used on pc.
+   160 000000DD 0F31                    rdtsc ;Counts the number of cycles/tics occured since pc reset.
+   161                                  
+   162 000000DF 48C1E220                shl rdx, 32 ;shift left 32
+   163 000000E3 4801D0                  add rax, rdx ;now add
+   164 000000E6 4989C7                  mov r15, rax ;store into r15
+   165                                  
+   166 000000E9 B800000000              mov qword rax, 0
+   167 000000EE 48BF-                   mov rdi, current_clock_message
+   167 000000F0 [0000000000000000] 
+   168 000000F8 4C89FE                  mov rsi, r15
+   169 000000FB E8(00000000)            call printf
+   170                                  
+   171 00000100 4D29F7                  sub r15, r14 ;subtract the current tics to tics from start of program.
+   172 00000103 B801000000              mov rax, 1
+   173 00000108 E8(00000000)            call clock_speed
+   174 0000010D F2440F10F0              movsd xmm14, xmm0 ;store clock speed in xmm14
+   175                                  
+   176 00000112 F24D0F2AEF              cvtsi2sd xmm13, r15 ;convert the subtracted tics into float
+   177 00000117 F2450F5EEE              divsd xmm13, xmm14 ; divide the tics by the clock speed to get elapsed time
+   178                                  
+   179 0000011C B801000000              mov qword rax, 1
+   180 00000121 48BF-                   mov rdi, tics_time_message
+   180 00000123 [8F00000000000000] 
+   181 0000012B 4C89FE                  mov rsi, r15
+   182 0000012E F2410F10C5              movsd xmm0, xmm13
+   183 00000133 E8(00000000)            call printf
+   184                                  
+   185 00000138 B800000000              mov qword rax, 0
+   186 0000013D 48BF-                   mov rdi, stringformat
+   186 0000013F [E700000000000000] 
+   187 00000147 48BE-                   mov rsi, final_message
+   187 00000149 [C700000000000000] 
+   188 00000151 E8(00000000)            call printf
+   189                                  
+   190 00000156 F2410F10C5              movsd xmm0, xmm13
+   191                                  
+   192 0000015B 9D                      popf
+   193 0000015C 415F                    pop r15
+   194 0000015E 415E                    pop r14
+   195 00000160 415D                    pop r13
+   196 00000162 415C                    pop r12
+   197 00000164 415B                    pop r11
+   198 00000166 415A                    pop r10
+   199 00000168 4159                    pop r9
+   200 0000016A 4158                    pop r8
+   201 0000016C 5E                      pop rsi
+   202 0000016D 5F                      pop rdi
+   203 0000016E 5A                      pop rdx
+   204 0000016F 59                      pop rcx
+   205 00000170 5B                      pop rbx
+   206 00000171 5D                      pop rbp               ;Restore the base pointer of the stack frame of the caller.
+   207                                  
+   208 00000172 C3                      ret
+   209                                  
+   210                                  ;========== End of program hertz.asm ================================================================================================================================
