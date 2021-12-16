@@ -1,0 +1,316 @@
+     1                                  ; #Author: Timothy Lee
+     2                                  ; #Class: CPSC240-03
+     3                                  ; #Email: timothylee43@csu.fullerton.edu
+     4                                  ; #Program name: Midterm 1 - Electricity
+     5                                  
+     6                                  ;===== Begin code area =====================================================================================================================================================
+     7                                  extern printf
+     8                                  
+     9                                  extern scanf
+    10                                  
+    11                                  extern fgets
+    12                                  
+    13                                  extern stdin
+    14                                  
+    15                                  extern strlen
+    16                                  
+    17                                  extern strcat
+    18                                  
+    19                                  global ampere
+    20                                  
+    21                                  one_half equ 0x3FE0000000000000
+    22                                  
+    23                                  segment .data
+    24                                  
+    25                                  align 16
+    26                                  
+    27 00000000 546869732070726F67-     welcome_message db "This program will help discover your work.", 10, 0
+    27 00000009 72616D2077696C6C20-
+    27 00000012 68656C702064697363-
+    27 0000001B 6F76657220796F7572-
+    27 00000024 20776F726B2E0A00   
+    28 0000002C 506C6561736520656E-     voltage_message db "Please enter the voltage applied to your electic device: ", 0
+    28 00000035 746572207468652076-
+    28 0000003E 6F6C74616765206170-
+    28 00000047 706C69656420746F20-
+    28 00000050 796F757220656C6563-
+    28 00000059 746963206465766963-
+    28 00000062 653A2000           
+    29 00000066 506C6561736520656E-     resistance_message db "Please enter the electric resistance found in your device: ", 0
+    29 0000006F 746572207468652065-
+    29 00000078 6C6563747269632072-
+    29 00000081 6573697374616E6365-
+    29 0000008A 20666F756E6420696E-
+    29 00000093 20796F757220646576-
+    29 0000009C 6963653A2000       
+    30 000000A2 506C6561736520656E-     seconds_message db "Please enter the time in seconds when your electric device was running: ", 0
+    30 000000AB 746572207468652074-
+    30 000000B4 696D6520696E207365-
+    30 000000BD 636F6E647320776865-
+    30 000000C6 6E20796F757220656C-
+    30 000000CF 656374726963206465-
+    30 000000D8 766963652077617320-
+    30 000000E1 72756E6E696E673A20-
+    30 000000EA 00                 
+    31 000000EB 576861742069732079-     last_name_message db "What is your last name? ", 0
+    31 000000F4 6F7572206C61737420-
+    31 000000FD 6E616D653F2000     
+    32 00000104 576861742069732079-     title_message db "What is your title? ", 0
+    32 0000010D 6F7572207469746C65-
+    32 00000116 3F2000             
+    33 00000119 5468616E6B20796F75-     thanks_message db "Thank you %s. ", 0
+    33 00000122 2025732E2000       
+    34 00000128 54686520776F726B20-     work_message db "The work performed by your device was %lf joules.", 10, 0
+    34 00000131 706572666F726D6564-
+    34 0000013A 20627920796F757220-
+    34 00000143 646576696365207761-
+    34 0000014C 7320256C66206A6F75-
+    34 00000155 6C65732E0A00       
+    35 0000015B 54686520616D706572-     final_message db "The ampere.cpp module received this number %f and plans to keep it.", 10, 0
+    35 00000164 652E637070206D6F64-
+    35 0000016D 756C65207265636569-
+    35 00000176 766564207468697320-
+    35 0000017F 6E756D626572202566-
+    35 00000188 20616E6420706C616E-
+    35 00000191 7320746F206B656570-
+    35 0000019A 2069742E0A00       
+    36 000001A0 257300                  stringformat db "%s", 0
+    37                                  
+    38 000001A3 256C6600                eight_byte_format db "%lf", 0                               ;general 8-byte float format
+    39                                  
+    40                                  
+    41                                  
+    42                                  ;testing purposes
+    43 000001A7 546865206F6E65206E-     output_one_float db "The one number is %5.3lf.",10,0
+    43 000001B0 756D62657220697320-
+    43 000001B9 25352E336C662E0A00 
+    44 000001C2 5468652074776F206E-     output_two_float db "The two numbers are %5.3lf and %5.3lf.",10,0
+    44 000001CB 756D62657273206172-
+    44 000001D4 652025352E336C6620-
+    44 000001DD 616E642025352E336C-
+    44 000001E6 662E0A00           
+    45 000001EA 546865207468726565-     output_three_float db "The three numbers are %5.3lf and %5.3lf and %5.3lf",10,0
+    45 000001F3 206E756D6265727320-
+    45 000001FC 6172652025352E336C-
+    45 00000205 6620616E642025352E-
+    45 0000020E 336C6620616E642025-
+    45 00000217 352E336C660A00     
+    46                                  
+    47 0000021E 90<rept>                align 64
+    48                                  
+    49                                  segment .bss
+    50                                  
+    51 00000000 <res 00000020>          last_name resb 32
+    52                                  
+    53 00000020 <res 00000020>          title resb 32
+    54                                  
+    55                                  
+    56                                  segment .text
+    57                                  
+    58                                  ampere:
+    59                                  
+    60 00000000 55                      push rbp                                              ;This marks the start of a new stack frame belonging to this execution of this function.
+    61 00000001 4889E5                  mov  rbp, rsp                                         ;rbp holds the address of the start of this new stack frame.  When this function returns to its caller rbp must
+    62 00000004 53                      push rbx
+    63 00000005 51                      push rcx
+    64 00000006 52                      push rdx
+    65 00000007 57                      push rdi
+    66 00000008 56                      push rsi
+    67 00000009 4150                    push r8
+    68 0000000B 4151                    push r9
+    69 0000000D 4152                    push r10
+    70 0000000F 4153                    push r11
+    71 00000011 4154                    push r12
+    72 00000013 4155                    push r13
+    73 00000015 4156                    push r14
+    74 00000017 4157                    push r15
+    75 00000019 9C                      pushf
+    76                                  ;=========== Prompt welcome message =================================================================================================================================
+    77                                  
+    78 0000001A B800000000              mov qword rax, 0
+    79 0000001F 48BF-                   mov rdi, stringformat
+    79 00000021 [A001000000000000] 
+    80 00000029 48BE-                   mov rsi, welcome_message
+    80 0000002B [0000000000000000] 
+    81 00000033 E8(00000000)            call printf
+    82                                  
+    83                                  ;=========== Ask user for voltage input=================================================================================================================================
+    84                                  
+    85 00000038 B800000000              mov qword rax, 0
+    86 0000003D 48BF-                   mov rdi, stringformat
+    86 0000003F [A001000000000000] 
+    87 00000047 48BE-                   mov rsi, voltage_message
+    87 00000049 [2C00000000000000] 
+    88 00000051 E8(00000000)            call printf
+    89                                  
+    90                                  ;get input of voltage and put into xmm12 register
+    91 00000056 6A00                    push qword 0
+    92 00000058 6A01                    push qword 1
+    93 0000005A B800000000              mov qword rax, 0
+    94 0000005F 48BF-                   mov rdi, eight_byte_format
+    94 00000061 [A301000000000000] 
+    95 00000069 4889E6                  mov rsi, rsp
+    96 0000006C E8(00000000)            call scanf
+    97 00000071 F2440F102424            movsd xmm12, [rsp]
+    98 00000077 58                      pop rax
+    99 00000078 58                      pop rax
+   100                                  
+   101                                  ;=========== Ask user for resistance input=================================================================================================================================
+   102 00000079 B800000000              mov qword rax, 0
+   103 0000007E 48BF-                   mov rdi, stringformat
+   103 00000080 [A001000000000000] 
+   104 00000088 48BE-                   mov rsi, resistance_message
+   104 0000008A [6600000000000000] 
+   105 00000092 E8(00000000)            call printf
+   106                                  
+   107                                  ;get input of resistance and put into xmm13 register
+   108 00000097 6A00                    push qword 0
+   109 00000099 6A01                    push qword 1
+   110 0000009B B800000000              mov qword rax, 0
+   111 000000A0 48BF-                   mov rdi, eight_byte_format
+   111 000000A2 [A301000000000000] 
+   112 000000AA 4889E6                  mov rsi, rsp
+   113 000000AD E8(00000000)            call scanf
+   114 000000B2 F2440F102C24            movsd xmm13, [rsp]
+   115 000000B8 58                      pop rax
+   116 000000B9 58                      pop rax
+   117                                  
+   118                                  ;=========== Ask user for seconds input=================================================================================================================================
+   119 000000BA B800000000              mov qword rax, 0
+   120 000000BF 48BF-                   mov rdi, stringformat
+   120 000000C1 [A001000000000000] 
+   121 000000C9 48BE-                   mov rsi, seconds_message
+   121 000000CB [A200000000000000] 
+   122 000000D3 E8(00000000)            call printf
+   123                                  
+   124                                  ;get input of seconds and put into xmm14 register
+   125 000000D8 6A00                    push qword 0
+   126 000000DA 6A01                    push qword 1
+   127 000000DC B800000000              mov qword rax, 0
+   128 000000E1 48BF-                   mov rdi, eight_byte_format
+   128 000000E3 [A301000000000000] 
+   129 000000EB 4889E6                  mov rsi, rsp
+   130 000000EE E8(00000000)            call scanf
+   131 000000F3 F2440F103424            movsd xmm14, [rsp]
+   132 000000F9 58                      pop rax
+   133 000000FA 58                      pop rax
+   134                                  
+   135                                  
+   136                                  ;=========== Calculate the work.=================================================================================================================================
+   137                                  ; xmm12 = voltage, xmm13 = resistance, xmm14 = seconds
+   138                                  ; Work = Voltage x Voltage x Time / Resistance
+   139 000000FB F2450F59E4              mulsd xmm12, xmm12
+   140 00000100 F2450F59E6              mulsd xmm12, xmm14
+   141 00000105 F2450F5EE5              divsd xmm12, xmm13
+   142 0000010A F2450F10FC              movsd xmm15, xmm12 ;save calculation to the safest register xmm15
+   143                                  
+   144                                  ; ;=========== Prompt for programmer's last name =================================================================================================================================
+   145 0000010F B800000000              mov qword  rax, 0
+   146 00000114 48BF-                   mov  rdi, stringformat
+   146 00000116 [A001000000000000] 
+   147 0000011E 48BE-                   mov  rsi, last_name_message
+   147 00000120 [EB00000000000000] 
+   148 00000128 E8(00000000)            call printf
+   149                                  
+   150                                  ;this input consumes the extra new line character created by scanf. hot fix for exam purposes.
+   151 0000012D B800000000              mov qword rax, 0
+   152 00000132 48BF-                   mov rdi, last_name
+   152 00000134 [0000000000000000] 
+   153 0000013C BE20000000              mov rsi, 32
+   154 00000141 488B1425[00000000]      mov rdx, [stdin]
+   155 00000149 E8(00000000)            call fgets
+   156                                  
+   157                                  ;this input actually receives the input from the user.
+   158 0000014E B800000000              mov qword rax, 0
+   159 00000153 48BF-                   mov rdi, last_name
+   159 00000155 [0000000000000000] 
+   160 0000015D BE20000000              mov rsi, 32
+   161 00000162 488B1425[00000000]      mov rdx, [stdin]
+   162 0000016A E8(00000000)            call fgets
+   163                                  
+   164                                  ;we remove the new line character in this code block
+   165 0000016F B800000000              mov rax, 0
+   166 00000174 48BF-                   mov rdi, last_name
+   166 00000176 [0000000000000000] 
+   167 0000017E E8(00000000)            call strlen
+   168 00000183 4989C6                  mov r14, rax
+   169 00000186 41BF00000000            mov r15, 0
+   170 0000018C 4D89BE[FFFFFFFF]        mov [last_name + r14 - 1], r15
+   171                                  
+   172                                  ;=========== Prompt for programmer's title name =================================================================================================================================
+   173 00000193 B800000000              mov qword rax, 0
+   174 00000198 48BF-                   mov rdi, stringformat
+   174 0000019A [A001000000000000] 
+   175 000001A2 48BE-                   mov rsi, title_message
+   175 000001A4 [0401000000000000] 
+   176 000001AC E8(00000000)            call printf
+   177                                  
+   178                                  ;ask for input of title
+   179 000001B1 B800000000              mov qword rax, 0
+   180 000001B6 48BF-                   mov rdi, title
+   180 000001B8 [2000000000000000] 
+   181 000001C0 BE20000000              mov rsi, 32
+   182 000001C5 488B1425[00000000]      mov rdx, [stdin]
+   183 000001CD E8(00000000)            call fgets
+   184                                  
+   185                                  ;we remove the new line character in this code block and add a space with 32
+   186 000001D2 B800000000              mov rax, 0
+   187 000001D7 48BF-                   mov rdi, title
+   187 000001D9 [2000000000000000] 
+   188 000001E1 E8(00000000)            call strlen
+   189 000001E6 4989C6                  mov r14, rax
+   190 000001E9 41BF20000000            mov r15, 32
+   191 000001EF 4D89BE[1F000000]        mov [title + r14 - 1], r15
+   192                                  
+   193                                  ;we use strcat to concat the two strings and save into title
+   194 000001F6 B800000000              mov rax, 0
+   195 000001FB 48BF-                   mov rdi, title
+   195 000001FD [2000000000000000] 
+   196 00000205 48BE-                   mov rsi, last_name
+   196 00000207 [0000000000000000] 
+   197 0000020F E8(00000000)            call strcat
+   198                                  
+   199                                  ; =========== Print calculation title, name, and of work=================================================================================================================================
+   200                                  ;print out the title and last name
+   201 00000214 B800000000              mov qword rax, 0
+   202 00000219 48BF-                   mov rdi, thanks_message
+   202 0000021B [1901000000000000] 
+   203 00000223 48BE-                   mov rsi, title
+   203 00000225 [2000000000000000] 
+   204 0000022D E8(00000000)            call printf
+   205                                  ;print out the work_message
+   206 00000232 B801000000              mov qword rax, 1
+   207 00000237 48BF-                   mov rdi, work_message
+   207 00000239 [2801000000000000] 
+   208 00000241 F2410F10C7              movsd xmm0, xmm15
+   209 00000246 E8(00000000)            call printf
+   210                                  ;print out final message
+   211 0000024B B801000000              mov qword rax, 1
+   212 00000250 48BF-                   mov rdi, final_message
+   212 00000252 [5B01000000000000] 
+   213 0000025A F2410F10C7              movsd xmm0, xmm15
+   214 0000025F E8(00000000)            call printf
+   215                                  
+   216                                  ;save the title and return as value of the function
+   217 00000264 48B8-                   mov rax, title
+   217 00000266 [2000000000000000] 
+   218                                  
+   219                                  ;===== Restore the pointer to the start of the stack frame before exiting from this function ==============================================================================
+   220                                  
+   221 0000026E 9D                      popf
+   222 0000026F 415F                    pop r15
+   223 00000271 415E                    pop r14
+   224 00000273 415D                    pop r13
+   225 00000275 415C                    pop r12
+   226 00000277 415B                    pop r11
+   227 00000279 415A                    pop r10
+   228 0000027B 4159                    pop r9
+   229 0000027D 4158                    pop r8
+   230 0000027F 5E                      pop rsi
+   231 00000280 5F                      pop rdi
+   232 00000281 5A                      pop rdx
+   233 00000282 59                      pop rcx
+   234 00000283 5B                      pop rbx
+   235 00000284 5D                      pop rbp
+   236                                  
+   237 00000285 C3                      ret
